@@ -1,0 +1,190 @@
+<h1>Tutorials</h1>
+<style type="text/css">
+pre
+{
+    background: #FFA;
+}
+</style>
+
+<div class="section">
+<h2>Tools you will want</h2>
+Keep in mind this is just my opinion, if you want to use other tools,
+feel free.
+<ul>
+<li>Python's BaseHTTPServer: You can use a full blown webserver, but I really like creating my own webserver in just a few lines of code.</li>
+<li>A firefox plugin to manipulate cookies</li>
+<li>A javascript framework like Jquery to simplify HTTP requests.</li>
+<li>Perl or Python scripts to create HTTP requests. Use whichever language you like better.</li>
+<li>Netcat (the nc command in linux) to play with the basic TCP level of HTTP requests.</li>
+</ul>
+</div>
+
+
+<div class="section">
+<h2>Cross Site Scripting Attack</h2>
+A cross site scripting (XSS) attack happens when 
+a site does not validate input from a user and a user is
+able to inject Javascript into the page.  When the user can inject
+javascript, he/she can force another users computer to execute that
+javascript without them knowing.  This technique can be used to steal 
+a cookie by forcing a request to a 3rd party server and appending the
+cookie value on the the end of the request. (This is just one example
+of the kinds of things XSS allows.) 
+</div>
+
+<div class="section">
+<h2>SQL Injection</h2>
+<p>
+SQL is the language used to pull data in most web applications.  Consider the following example:
+<pre>
+SELECT * FROM users WHERE username = '$username' AND password = '$pass'
+</pre>
+suppose in this example, $username and $pass are variables that are 
+taken directly from user's input without any validation. Now, if a 
+user was clever, they would enter a password like:
+<pre>' OR 1=1--</pre>
+(the -- is a comment block in SQL) and the query will become:
+<pre>
+SELECT * FROM users WHERE username = 'mal' AND password = '' OR 1=1--'
+</pre>
+and since 1 always = 1, for any row, every row is returned and depending
+on the rest of the code, the bad guy may become the first user in the 
+database.  If the bad guy was more evil, his password might be:
+<pre>
+'; DROP DATABASE;--
+</pre>
+and I think it's clear what the effects are.
+</p>
+</div>
+
+<div class="section">
+<h2>Session Hijacking</h2>
+HTTP is by nature a stateless protocol.  This means that
+in order to simulate state, there must be some mechanism for
+the HTTP server to know who the user is.  The solution is called
+a "session."  Typically, the browser stores a cookie which 
+contains a unique ID to associate that user with their session.
+</p>
+<p>
+At this point, I hope you are wondering, "but what if I can figure 
+out the unique id in that cookie?"  Yes, you can do this.  And yes, 
+you will become them, as far as the website is concerned.</p>
+<p>
+On a good website, the cookie is only allowed to be transmitted over a 
+secure HTTPS connection, and a packet sniffer would be unable to 
+force a request that would expose the cookie.  Also on a good website, 
+the unique ID would be different every time the user logs in, so that
+if the cookie was stolen once, the attacker would only have the session
+for a limited amount of time.  A lot of websites ignore these best 
+practices.
+
+In Javascript, you can access the cookies on a webpage from the 
+"document.cookie" variable.  Keep in mind the browser is only going
+to show the cookies of the website you are on, this is a basic
+security feature.  So in order to  programmatically access some users
+cookies you must be able to inject your code onto their page.
+</p>
+</div>
+
+<div class="section">
+<h2>Cross Site Forgery Request</h2>
+<p>
+Cross site forgery request (CSRF, or C-SURF, or Session Surfing) 
+attacks are often similar to XSS attacks in practice (many attacks are a little
+of both, and often it's difficult to classify them as one or another).
+The very basic idea in a CSRF attack is to force a user's browser
+to make a request to a site he/she is already logged into.  The web 
+server then runs the script as if the user knowingly made the request.
+</p>
+<p>
+CAPTCHA are a way many sites try to prevent this.  In order to fake 
+the request from the user, the script would have to get the 
+CAPTCHA challenge correct.
+</p>
+</div>
+
+
+<div class="section">
+<h2>Creating an HTTP Request</h2>
+<p>
+<h3>In Python:</h3>
+<pre>
+import urllib2
+
+getRequest = urllib2.urlopen("http://anything.com")
+print getRequest.read()
+print getRequest.info()
+
+postRequest = urllib2.urlopen("http://anything.com/login.php","user=me&pass=iluvbears")
+</pre>
+<p>To do more complicated requests, you may need to create a urllib2.Request object.  The Python docs are pretty good. Check them out.
+</p>
+<h3>In Perl:</h3>
+<pre>
+use URI;
+my $url = URI->new('http://somesite.com/search');
+$url->query_form(
+  'title'     => 'Kittens',
+  'type'      => 'Posters',
+);
+
+</pre>
+<p>
+Just google Perl HTTP, the first result is a great tutorial that demonstrates POST requests, saving cookies, changing user agent string, way too much for me to go over.
+</p>
+<h3>In Javascript*:</h3>
+<pre>
+var req = new XMLHttpRequest();
+req.open("GET","somelocalpage.php?search=waldo&results=15",true);
+req.send(null);
+</pre>
+<p>
+*Modern browsers obey the "same origin policy" which prevents web 
+pages from making certain types of requests to other domains.  
+If you want to make a request from a domain that is different from 
+the webpage your script is hosted on, you'll need to be a little 
+more clever (hint: think about the type of content the web allows cross-domain access to).
+</p>
+<p>
+A post request in javascript is also slightly more complex; instead of sending null on the 3rd line, you send that data in the form of key1=value1&key2=value2... Keep in mind this method only works in non-IE browsers.  For easier POSTing and more browser support check out a javascript framework like jQuery.
+</p>
+</div>
+
+<div class="section">
+<h2>Running an HTTP Server</h2>
+<p>
+Using Python's BaseHTTPServer
+<pre>
+import BaseHTTPServer
+
+class Dispatcher(BaseHTTPServer.BaseHTTPRequestHandler):
+    def do_GET(self):
+        if self.path == "/redirect":
+            self.send_response(301)
+            self.wfile.write("Location: http://www.google.com")
+            self.end_headers()
+        elif self.path == "/sayhello":
+            self.send_request(200)
+            self.end_headers()
+            self.wfile.write("Hello world")
+        else:
+            print self.path
+    def do_POST(self):
+        pass
+port = 7688
+server = BaseHTTPServer.HTTPServer(('',port),Dispatcher)
+server.serve_forever()
+</pre>
+In this simple example, we have a web server running on port 7688. If you 
+navtiaged your browser to http://localhost:7688/redirect it would redirect you to Google,
+and if you navigated to http://localhost:7688/sayhello you would be greeted by a simple web page that prints "Hello World".
+<p>
+In practice, you can combine these basic features with python's regular
+expression package and have a very dynamic web server. You can also write files to self.wfile just like it was an file on your computer; this is how you return files with a custom python webserver.
+</p>
+</div>
+
+<h2>Expanding this document</h2>
+<p>
+When taking notes for your team, you should include documentation similar to this, so that we can build this up to a comprehensive tutorial.  I didn't cover a lot of things on purpose; I don't want to make this too easy.  As stated in the rules, the team with the best documentation gets extra points!
+</p>

@@ -1,0 +1,5 @@
+Ok, so this is the 4flame you've all been waiting for.
+
+Just extract the tar.gz (as you have done, apparently), throw it up on apache, and create a database with the stuff in the schema.sql file.
+
+You'll also need to point your php files to your database authentication somehow.  You can put it in a file like I did or hard code them.
