@@ -1,0 +1,11 @@
+Hacking of Friendspace part 1:
+
+The goal of this "hack" challenge was to make it so that any user who visits my
+created profile would automatically have me added as a friend.
+
+From viewing a user's profile source there was only one function in there.
+The function for adding a friend.
+We copied the php code that this called and appended to friendspace.com.
+Next, we went to our profile's image upload and stuck this link in there
+rather than a link to a picture on our computer.
+This forced the link to be called by every user who visits our page.

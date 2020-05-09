@@ -1,0 +1,28 @@
+4flame security details
+
+This site was nice enough to choose an opensource policy. This allowed us to
+quickly get a detailed schematic of their database.
+
+We figured the best way to crash this site was to drop a table that the site
+required to function from the database.
+
+We registered a few test users and then starting attempting sql injection type
+attacks. In the register page, we found that we could put an invalid email address in.
+The site simply takes the email and password, then throws them in to an insert command.
+If you make the first portion of the email and "finish" the sql command for inserting a user,
+you are still stuck with the last half where the password goes. What we did 
+to get around this was create a second insert statement (one to take care of email, one to take
+care of password form). Now what we had was a submit that created 2 users properly. The cool
+part about this is we can now put ANY sql command in between the two user creation commands
+and it will be run. The "final' command we used to crash the site was
+
+zzodmg@omg.com', 'crap'); DROP TABLE threads; INSERT INTO users(email,password) VALUES('tsest@test222.com
+
+To break this down, the zzodmg@omg.com', 'crap') finishes the first insert command that the
+form starts, and the last INSERT INTO users(email, password) VALUES('tsest@test222.com shoves itself in front of the final part of the form created sql command.
+Our site destorying sql command DROP TABLE threads was thrown in to the middle, executed,
+and all threads from the homepage (and the table required to load the home page) were gone.
+Site down.
+
+Interestingly enough, we would have had the hack working almost 1 hour soon except I mispelled 
+the word "INSERT". :( 
